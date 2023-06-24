@@ -1,0 +1,7 @@
+.env
+.venv
+.vscode
+notebooks/remove_template.ipynb
+dist/
+*.mp3
+__pycache__/
