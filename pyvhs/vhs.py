@@ -8,6 +8,7 @@ import sys
 import argparse
 import gc
 from pathlib import Path
+import pkg_resources
 import time
 from PIL import Image
 import numpy as np
@@ -21,6 +22,9 @@ from pyvhs.utils.edits import EditVideo
 def debugger_is_active() -> bool:
     """Return if the debugger is currently active"""
     return hasattr(sys, 'gettrace') and sys.gettrace() is not None
+
+# Packaged template images with PyVHS
+DEFAULT_PATH_TEMPLATES = pkg_resources.resource_filename('pyvhs', 'template_imgs/')
 
 
 def main():
@@ -42,7 +46,7 @@ def main():
                             help = "Directory containing video files")
         parser.add_argument("-template_imgs",
                             required=False,
-                            default='./pyvhs/template_imgs',
+                            default=DEFAULT_PATH_TEMPLATES,
                             type=str,
                             help = "Path to template images")
         parser.add_argument("-threshold",
