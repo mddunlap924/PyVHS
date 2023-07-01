@@ -267,27 +267,9 @@ class EditVideo:
         Args:
             final_video_clip (VideoFileClip): Final video clip to be saved to disk
         """
-        # # Save final video to disk
-        # final_video_clip.write_videofile(self.path_edited.as_posix(),
-        #                                  verbose=False)
-
-        # # Append information to log file
-        # if self.path_log.exists():
-        #     with open(self.path_log, 'a') as f:
-        #         # Original Video Info:
-        #         f.write((f'\nOriginal Video Information:\n\t'
-        #                  f'Path: {self.path_original.as_posix()}'))
-        #         f.write(f'Duration: {convert(seconds=self.duration)}')
-
-        #         # Final Video Info:
-        #         f.write((f'\nEdited/Saved Video Information:\n\t'
-        #                  f'Path: {self.path_edited.as_posix()}'))
-        #         f.write(f'Duration: {convert(seconds=final_video_clip.duration)}')
-
-        #         # Amount of time cropped out of final video
-        #         f.write((f'\nTotal Time of Blank Segments Removed: '
-        #                  f'{convert(seconds=self.duration - final_video_clip.duration)}'))
-        #     f.close()
+        # Save final video to disk
+        final_video_clip.write_videofile(self.path_edited.as_posix(),
+                                         verbose=False)
         return
 
 
