@@ -35,7 +35,8 @@ def main():
     # Parse the arguments
     if is_debugger:
         args = argparse.Namespace()
-        args.dir = '/nvme4tb/videos_to_edit'
+        args.dir = '/nvme4tb/test_video'
+        args.template_imgs = DEFAULT_PATH_TEMPLATES
     else:
         arg_desc = '''Remove template images from a video file'''
         parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter,
@@ -93,10 +94,20 @@ def main():
 
             # Save edited video to disk
             st = time.time()
-            print(f'Saving New Video at: {path_edit}')
-            video_edit.save_video(final_video_clip=final_clip)
-            print((f'\nEdited Video Saved: '
-                   f'{round((time.time() - st) / 60, 3)} mins.'))
+            if video_edit.blank_segments:
+                print(f'Saving New Video at: {path_edit}')
+                video_edit.save_video(final_video_clip=final_clip)
+                print((f'\nEdited Video Saved: '
+                    f'{round((time.time() - st) / 60, 3)} mins.'))
+            else:
+                print((f'Not Saving Edited Video because No Blank '
+                       f'Segments Identified for Video.: \n\t'
+                       f'{path_org.as_posix()}'))
+
+            # Log which segments of the video were blank (i.e., removed and/or kept)
+            video_edit.save_logger(final_video_clip=final_clip,
+                                   print_blanks=True,
+                                   print_keeps=True)
 
             # Clean up memory
             del video_edit, final_clip
