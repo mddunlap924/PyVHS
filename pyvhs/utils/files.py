@@ -18,7 +18,15 @@ class VideosToEdit:
         if self.is_dir:
             # Assume only video files in the directory
             tmp = list(self.path.glob('**/*'))
-            self.original = [i for i in tmp if i.is_file()]
+
+            # Check that the path is a file
+            tmp = [i for i in tmp if i.is_file()]
+
+            # Remove text files from being processed if they are present
+            tmp = [i for i in tmp if i.suffix != '.txt']
+
+            # Video files to be processed
+            self.original = tmp
         elif self.is_file:
             # Assume the file is video
             self.original = [self.path]

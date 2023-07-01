@@ -9,6 +9,21 @@ from skimage.metrics import structural_similarity as ssim
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 
 
+def convert(seconds):
+    """
+    Converts seconds into hours, minutes, seconds
+
+    Args:
+        seconds (_type_): Total seconds
+
+    Returns:
+        _type_: Hours, mintues, seconds
+    """
+    min, sec = divmod(seconds, 60)
+    hour, min = divmod(min, 60)
+    return '%dhours %02dminutes %02dseconds' % (hour, min, sec)
+
+
 def templates_similarity(template_imgs: list,
                          img: np.array,
                          threshold: float):
@@ -101,13 +116,28 @@ def extract_segments(blanks: list,
     # (i.e., no time-to-time differences in being identified as blank image)
     # index of blank segments in vec >= num_seq_blanks
     blank_segs = [[s[1], s[1] + s[2] - 1]
-                  for s in seqs 
+                  for s in seqs
                   if s[0] == 1 and s[2] >= num_sequentially_blanks]
 
     footage_segs = [[s[1], s[1] + s[2] - 1]
-                    for s in seqs 
+                    for s in seqs
                     if s[0] == 0 and s[2] >= num_sequentially_footage]
-    return blank_segs, footage_segs
+
+    # Add an time step at start and end to ensure no footage is lost
+    # This will retain some blue screens
+    footage_segs_final = []
+    for footage_seg in footage_segs:
+        start, end = footage_seg[0], footage_seg[1]
+        if start == 0:
+            start = 0
+        else:
+            start = start -1
+        if end == len(blanks):
+            end = end
+        else:
+            end = end + 1
+        footage_segs_final.append([start, end])
+    return blank_segs, footage_segs_final
 
 
 class EditVideo:
@@ -144,6 +174,9 @@ class EditVideo:
         self.end_time = math.floor(self.duration)
         del clip
         _ = gc.collect()
+
+        # Path to save log file
+        self.path_log = self.path_original.parent / (self.path_original.stem + '_log.txt')
 
         # Attributes to calculate
         self.blank_segments = []
@@ -210,7 +243,7 @@ class EditVideo:
         (blank_segments,
          keep_segments) = extract_segments(blanks=blank_times,
                                            num_sequentially_blanks=2,
-                                           num_sequentially_footage=2)
+                                           num_sequentially_footage=1)
         self.blank_segments = blank_segments
         self.keep_segments = keep_segments
         # Exit the program if no keep_segments are found (i.e., entire video is blank)
@@ -234,7 +267,82 @@ class EditVideo:
         Args:
             final_video_clip (VideoFileClip): Final video clip to be saved to disk
         """
-        final_video_clip.write_videofile(self.path_edited.as_posix(),
-                                         verbose=False)
+        # # Save final video to disk
+        # final_video_clip.write_videofile(self.path_edited.as_posix(),
+        #                                  verbose=False)
+
+        # # Append information to log file
+        # if self.path_log.exists():
+        #     with open(self.path_log, 'a') as f:
+        #         # Original Video Info:
+        #         f.write((f'\nOriginal Video Information:\n\t'
+        #                  f'Path: {self.path_original.as_posix()}'))
+        #         f.write(f'Duration: {convert(seconds=self.duration)}')
+
+        #         # Final Video Info:
+        #         f.write((f'\nEdited/Saved Video Information:\n\t'
+        #                  f'Path: {self.path_edited.as_posix()}'))
+        #         f.write(f'Duration: {convert(seconds=final_video_clip.duration)}')
+
+        #         # Amount of time cropped out of final video
+        #         f.write((f'\nTotal Time of Blank Segments Removed: '
+        #                  f'{convert(seconds=self.duration - final_video_clip.duration)}'))
+        #     f.close()
+        return
+
+
+    def save_logger(self,
+                    final_video_clip,
+                    *,
+                    print_blanks: bool=True,
+                    print_keeps: bool=False):
+        """
+        Save a text file showing the segments that were blank (i.e., removed). 
+        The units are in seconds.
+
+        Args:
+            final_video_clip (VideoFileClip): Final video clip.
+            print_blanks (bool, optional): Blank segments in the video clip. Defaults to True.
+            print_keeps (bool, optional): Footage segments in the video clip. Defaults to False.
+        """
+
+        # Save log file to disk
+        with open(self.path_log, 'w') as f:
+            # Original Video Info:
+            f.write((f'Original Video Information:\n\t'
+                        f'Path: {self.path_original.as_posix()}'))
+            f.write(f'Duration: {convert(seconds=self.duration)}\n')
+
+            # Final Video Info:
+            f.write((f'\nEdited/Saved Video Information:\n\t'
+                        f'Path: {self.path_edited.as_posix()}'))
+            f.write(f'Duration: {convert(seconds=final_video_clip.duration)}\n')
+
+            # Amount of time cropped out of final video
+            f.write((f'\nTotal Time of Blank Segments Removed: '
+                        f'{convert(seconds=self.duration - final_video_clip.duration)}\n'))
+
+            # Blank Segments
+            if print_blanks:
+                f.write('\nOriginal Video - Blank Segment Information')
+                if self.blank_segments:
+                    f.write(f'\n\tTotal Num. of Blank Segments: {len(self.blank_segments):,}\n')
+                    for i, blank_seg in enumerate(self.blank_segments):
+                        f.write((f'\tBlank Segment #{(i + 1):,}: '
+                                 f'{blank_seg[0]:,} - {blank_seg[1]:,} seconds\n'))
+                else:
+                    f.write('\n\tNo Blank Segments Identified\n')
+
+            # Keep Segments (i.e., footage saved in new video)
+            if print_keeps:
+                f.write('\nOriginal Video - Footage Segment Information')
+                if self.keep_segments:
+                    f.write(f'\n\tTotal Num. of Footage Segments: {len(self.keep_segments):,}\n')
+                    for i, keep_seg in enumerate(self.keep_segments):
+                        f.write((f'\tFootage Segment #{(i + 1):,}: '
+                                 f'{keep_seg[0]:,} - {keep_seg[1]:,} seconds\n'))
+                else:
+                    f.write('\tNo Footage Segments Identified\n')
+        print(f'\n\tLog File Saved at: \n\t{self.path_log}')
         return
     
