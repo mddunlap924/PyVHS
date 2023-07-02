@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvhs"
-version = "0.1.2"
+version = "0.1.3"
 description = "Digitized VHS Cassette Editing with Python"
 authors = ["Myles Dunlap"]
 license = "MIT"

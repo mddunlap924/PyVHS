@@ -51,6 +51,32 @@ A primary benefit of this package is that there is no need to manually remove bl
 
 
 # Installation
+The following steps are required to use <b>PyVHS</b>:
+
+1) [Install Python](https://www.python.org/downloads/): Python can be installed on Windows, macOS, and Linux operating systems. Go to the official [Python download page](https://www.python.org/downloads/) and install Python 3.9 or higher.
+    * If you are a Windows user and need help installing Python then there are many helpful online articles for this topic. For example, here is helpful [step-by-step set of instructions from Digital Ocean](https://www.digitalocean.com/community/tutorials/install-python-windows-10).
+2) Once Python is installed open a command line shell (e.g. in Windows type `cmd` in the lower-left search field).
+3) A virtual environment is recommended for installing <b>PyVHS</b>. This is easily setup from the command line by typing:
+
+<b>Windows Users</b>: using the cmd shell
+```cmd
+pip install virtualenv
+virtualenv myenv
+myenv\Scripts\activate
+pip install pyvhs
+pyvhs -dir="PATH_TO_DIRECTORY_CONTAINING_VIDEO"
+```
+
+<b>macOS and Linux Users</b>: using the bash shell
+```bash
+pip install virtualenv
+virtualenv myenv
+source ./myenv/venv/bin/activate
+pip install pyvhs
+pyvhs -dir="PATH_TO_DIRECTORY_CONTAINING_VIDEO"
+```
+More information on setting-up and deactivating virtual environments can be found in this [online Geeks for Geeks article](https://www.geeksforgeeks.org/creating-python-virtual-environment-windows-linux/).
+
 ## pip
 Available on [PyPI](https://pypi.org/project/pyvhs/)
 ```bash
